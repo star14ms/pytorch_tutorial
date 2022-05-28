@@ -1,16 +1,18 @@
-import sys
-sys.path.extend(['.', r'C:\Users\danal\Documents\programing\python']) # 
-
+import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+
 import time as t
-from plot import *
-from util import time
-from module import *
-import numpy as np
 import os
 import pickle
+
+from models import NeuralNetwork2
+from plot import *
+from utils import Time
+from module import *
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 ######################################################################
 
@@ -35,187 +37,11 @@ print("Using {} device\n".format(device))
 
 
 # 모델을 정의합니다.
-class NeuralNetwork(nn.Module):
-    def __init__(self):
-        super(NeuralNetwork, self).__init__()
-        self.linear_relu_stack = nn.Sequential(
-            Conv2d_Norm_ReLU(1, 16),
-            Conv2d_Norm_ReLU(16, 32),
-            nn.Flatten(),
-
-            nn.Linear(32*28*28, 50),
-            nn.BatchNorm1d(50),
-            nn.ReLU(),
-            nn.Dropout(),
-            nn.Linear(50, 10),
-            nn.Dropout(),
-        )
-
-    def forward(self, x):
-        logits = self.linear_relu_stack(x)
-        return logits
-
-# CCPCc+CLL(+N,D)
-class NeuralNetwork1(nn.Module):
-    def __init__(self, img_size=28, c1=32, c2=32, c3=64, c4=64, hiddens=50):
-        super(NeuralNetwork1, self).__init__()
-        img_size = (28//2+2)//2
-        in_features = (c3+c4)*img_size*img_size
-
-        self.conv1_pool = nn.Sequential(
-            Conv2d_Norm_ReLU(1, c1), 
-            Conv2d_Norm_ReLU(c1, c1), 
-            nn.MaxPool2d(kernel_size=2, stride=2), # /2
-        )
-        self.conv2 = Conv2d_Norm_ReLU(c1, c2, kernel_size=2, stride=2) # /2+1
-        self.conv3 = Conv2d_Norm_ReLU(c2, c3)
-        self.conv4 = Conv2d_Norm_ReLU(c3, c4)
-
-        self.flatten = nn.Sequential(
-            nn.Flatten(),
-            Dropout,
-        )
-        
-        self.liner1 = nn.Sequential(
-            Liner_Norm_ReLU(in_features, hiddens),
-            Dropout,
-        )
-        self.liner2 = nn.Sequential(
-            nn.Linear(hiddens, 10),
-            Dropout,
-        )
-
-    def forward(self, x):
-        x1 = self.conv1_pool(x)
-        x2 = self.conv2(x1)
-        x3 = self.conv3(x2)
-        x4 = self.conv4(x3)
-        x = torch.cat([x3, x4], dim=1)
-        x = self.flatten(x)
-
-        x5 = self.liner1(x)
-        y = self.liner2(x5)
-
-        # if save_activation_value:
-            # act_values['conv1'].append(x1)
-            # act_values['conv2'].append(x2)
-            # act_values['conv3'].append(x3)
-            # act_values['conv4'].append(x4)
-            # act_values['liner1'].append(x5)
-
-        return y
-
-# CCPCPC+CLL(+N,D)
-class NeuralNetwork2(nn.Module):
-    def __init__(self, img_size=28, c1=32, c2=64, c3=64, c4=64, hiddens=50):
-        super(NeuralNetwork2, self).__init__()
-        img_size = (28//2+2)//2
-        in_features = (c3+c4)*img_size*img_size
-
-        self.conv1_pool = nn.Sequential(
-            Conv2d_Norm_ReLU(1, c1), 
-            Conv2d_Norm_ReLU(c1, c1), 
-            nn.MaxPool2d(kernel_size=2, stride=2), # /2
-        )
-        self.conv2_pool = nn.Sequential(
-            Conv2d_Norm_ReLU(c1, c2, padding=2), # +2
-            nn.MaxPool2d(kernel_size=2, stride=2), # /2
-        )
-        self.conv3 = Conv2d_Norm_ReLU(c2, c3)
-        self.conv4 = Conv2d_Norm_ReLU(c3, c4)
-
-        self.flatten = nn.Sequential(
-            nn.Flatten(),
-            Dropout,
-        )   
-        self.liner1 = nn.Sequential(
-            Liner_Norm_ReLU(in_features, hiddens),
-            Dropout,
-        )
-        self.liner2 = nn.Sequential(
-            nn.Linear(hiddens, 10),
-            Dropout,
-        )
-
-    def forward(self, x):
-        x1 = self.conv1_pool(x)
-        x2 = self.conv2_pool(x1)
-        x3 = self.conv3(x2)
-        x4 = self.conv4(x3)
-        x = torch.cat([x3, x4], dim=1)
-        x = self.flatten(x)
-
-        x5 = self.liner1(x)
-        y = self.liner2(x5)
-
-        # if save_activation_value:
-            # act_values['conv1'].append(x1)
-            # act_values['conv2'].append(x2)
-            # act_values['conv3'].append(x3)
-            # act_values['conv4'].append(x4)
-            # act_values['liner1'].append(x5)
-
-        return y
-
-# CCPCCPC+CLL(+N,D)
-class NeuralNetwork3(nn.Module):
-    def __init__(self, img_size=28, c1=32, c2=64, c3=64, c4=64, hiddens=50):
-        super(NeuralNetwork3, self).__init__()
-        img_size = (28//2+2)//2
-        in_features = (c3+c4)*img_size*img_size
-
-        self.conv1_pool = nn.Sequential(
-            Conv2d_Norm_ReLU(1, c1), 
-            Conv2d_Norm_ReLU(c1, c1), 
-            nn.MaxPool2d(kernel_size=2, stride=2), # /2
-        )
-        self.conv2_pool = nn.Sequential(
-            Conv2d_Norm_ReLU(c1, c2), # +2
-            Conv2d_Norm_ReLU(c2, c2, padding=2),
-            nn.MaxPool2d(kernel_size=2, stride=2), # /2
-        )
-        self.conv3 = Conv2d_Norm_ReLU(c2, c3)
-        self.conv4 = Conv2d_Norm_ReLU(c3, c4)
-
-        self.flatten = nn.Sequential(
-            nn.Flatten(),
-            Dropout,
-        )
-        
-        self.liner1 = nn.Sequential(
-            Liner_Norm_ReLU(in_features, hiddens),
-            Dropout,
-        )
-        self.liner2 = nn.Sequential(
-            nn.Linear(hiddens, 10),
-            Dropout,
-        )
-
-    def forward(self, x):
-        x1 = self.conv1_pool(x)
-        x2 = self.conv2_pool(x1)
-        x3 = self.conv3(x2)
-        x4 = self.conv4(x3)
-        x = torch.cat([x3, x4], dim=1)
-        x = self.flatten(x)
-
-        x5 = self.liner1(x)
-        y = self.liner2(x5)
-
-        if save_activation_value:
-            act_values['conv1'].append(x1)
-            act_values['conv2'].append(x2)
-            act_values['conv3'].append(x3)
-            act_values['conv4'].append(x4)
-            act_values['liner1'].append(x5)
-
-        return y
-
-model = NeuralNetwork2().to(device)
-model_path = 'model acc_99.49 loss_0.00064153 CCPCPC+CLL(+N,D) 70ep'
-model.load_state_dict(torch.load(model_path+'.pth'))
+model = NeuralNetwork2(save_activation_value=True).to(device)
+# model_path = 'model acc_99.49 loss_0.00064153 CCPCPC+CLL(+N,D) 70ep'
+# model.load_state_dict(torch.load(model_path+'.pth'))
 # model = torch.load('2model acc_99.44 loss_0.00045928 CCPCCPC+CLL(+N,D)'+'.pth')
-network = 'CCPCCPC+CLL(+N,D)'
+network = model.__class__.__name__
 # print(model)
 
 #####################################################################
@@ -225,10 +51,7 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
 # show_filters(model)
-
-save_activation_value = False
-# act_values = {'conv1':[], 'conv2':[], 'conv3':[], 'conv4':[], 'liner1':[]}
-# show_activation_value_distribution(model, test_dataloader, device, loss_fn, act_values, ylim=1e6*2)
+# show_activation_value_distribution(model, test_dataloader, device, loss_fn, ylim=1e6*2)
 # exit()
 ##############################################################################
 
@@ -251,12 +74,13 @@ graph_datas = {'train_losses':[], 'test_losses':[], 'train_losses_all':[], 'test
 
 start_time = t.time()
 max_acc = 0
-epochs = 0
+epochs = 10
 file_path1, file_path2 = None, None
 save_min_acc = 0.994
 
+
 for i in range(epochs):
-    print(f"Epoch {i+1} ({time.str_hms_delta(start_time)})\n-------------------------------")
+    print(f"Epoch {i+1} ({Time.hms_delta(start_time)})\n-------------------------------")
     _, train_loss_avg = train(train_dataloader, model, device, loss_fn, optimizer, graph_datas)
     acc, test_loss_avg = test(test_dataloader, model, device, loss_fn)
     
@@ -282,15 +106,20 @@ for i in range(epochs):
 
 print("Done!")
 
+
 if epochs > 0:
     with open(f'graph_datas acc_{(100*acc):>0.2f} loss_{test_loss_avg:>0.8f} {network}.pkl', 'wb') as f:
         pickle.dump(graph_datas, f)
 
     # 모델 저장하기
-    torch.save(model.state_dict(), f"model acc_{(100*acc):>0.2f} loss_{test_loss_avg:>0.8f} {network}.pth")
+    save_path = f"model acc_{(100*acc):>0.2f} loss_{test_loss_avg:>0.8f} {network}.pth"
+    torch.save(model.state_dict(), save_path)
     print("Saved PyTorch Model State to model.pth")
 
-    losses = {'train_losses':graph_datas['train_losses'], 'test_losses':graph_datas['test_losses']}
+    losses = {
+        'train_losses': graph_datas['train_losses'], 
+        'test_losses':graph_datas['test_losses']
+    }
     plot.loss_graphs(losses, smooth=False, ylim=0.001)
     plot.accuracy_graph(graph_datas['test_accs'])
     plot.loss_graph(graph_datas['train_losses_all'], ylim=0.1)

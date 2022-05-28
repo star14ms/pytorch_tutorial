@@ -300,8 +300,16 @@ class plot:
 
 ################################################################################################################################
 
-    def set_font(font_path):
+    def set_font(font_path='', family=''):
+        '''
+            ``print(mpl.matplotlib_fname())`` 이 경로에 폰트 추가 필요
+            ``print(mpl.get_cachedir())`` 캐시 지우는 경로
+        '''
         import matplotlib.font_manager as fm
 
-        font_name = fm.FontProperties(fname=font_path, size=50).get_name()
+        if family:
+            font_name = family
+        else:
+            font_name = fm.FontProperties(fname=font_path, size=50).get_name()
+        
         plt.rc('font', family=font_name)

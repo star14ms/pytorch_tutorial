@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 
+
 class CustomImageDataset(Dataset):
     def __init__(self, x, t, transform=None, target_transform=None):
         self.x = x
@@ -26,12 +27,14 @@ import torch
 import numpy as np
 from dataset.mnist import load_mnist
 
+
 def shuffle_dataset(x, t):
     permutation = np.random.permutation(x.shape[0])
     x = x[permutation,:] if x.ndim == 2 else x[permutation,:,:,:]
     t = t[permutation]
 
     return x, t
+
 
 def load_mnist_torch_dataset(normalize=True, flatten=True, one_hot_label=False, train_sample='all', test_sample='all', shuffle=True):
     (x_train, t_train), (x_test, t_test) = load_mnist(normalize=normalize, flatten=flatten, one_hot_label=one_hot_label)
@@ -52,28 +55,6 @@ def load_mnist_torch_dataset(normalize=True, flatten=True, one_hot_label=False, 
     test_data = CustomImageDataset(x_test, t_test)
 
     return (training_data, test_data)
-
-
-import torch
-from torch import nn
-
-ReLU = nn.ReLU()
-Dropout = nn.Dropout()
-
-def Conv2d_Norm_ReLU(in_chans, out_chans, kernel_size=3, stride=1, padding=1):
-    return nn.Sequential(
-        nn.Conv2d(in_chans, out_chans, kernel_size, stride, padding),
-        nn.BatchNorm2d(out_chans),
-        ReLU
-    )
-
-def Liner_Norm_ReLU(in_features, out_features):
-    return nn.Sequential(
-        nn.Linear(in_features, out_features),
-        nn.BatchNorm1d(out_features),
-        ReLU
-    )
-
 
 
 def train(dataloader, model, device, loss_fn, optimizer, graph_datas=None, verbose=True):
@@ -101,6 +82,7 @@ def train(dataloader, model, device, loss_fn, optimizer, graph_datas=None, verbo
     train_loss /= size
     correct /= size
     return correct, train_loss
+
 
 def test(dataloader, model, device, loss_fn, return_wrong_xs=False, verbose=True):
     size = len(dataloader.dataset)
@@ -135,14 +117,18 @@ def test(dataloader, model, device, loss_fn, return_wrong_xs=False, verbose=True
 from plot import plot
 import sys
 
+
 def show_filters(model):
     for param in model.parameters():
         print(param.size(), 'Conv params!!' if len(param.size()) == 4 else '') 
         if len(param.size()) == 4: plot.imgs_show(param.detach().numpy())
 
-def show_activation_value_distribution(model, test_dataloader, device, loss_fn, act_values, ylim=1e6*2):
+
+def show_activation_value_distribution(model, test_dataloader, device, loss_fn, ylim=1e6*2):
     test(test_dataloader, model, device, loss_fn, return_wrong_xs=False)
     
+    act_values = model.act_values
+
     for key in act_values.keys():
         while len(act_values[key]) != 1:
             act_values[key][0] = torch.cat([act_values[key][0], act_values[key][1]], dim=1)
@@ -161,6 +147,7 @@ def show_activation_value_distribution(model, test_dataloader, device, loss_fn, 
 
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
+
 
 def show_wrong_answers_info(wrong_xs, wrong_ys, dark_mode=True, title='', title_info=[], text_info=[]):
     len_wrongs = len(wrong_ys)
