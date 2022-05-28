@@ -1,4 +1,6 @@
 import time as t
+import datetime as dt
+from selenium import webdriver
 
 
 class Time:
@@ -29,3 +31,18 @@ class Time:
             m, s = str(m).rjust(2), str(s).rjust(2)
         
         return str(f"{h}h{join}{m}m{join}{s}s")
+
+
+def alerm(webdriver_path=r'C:\Users\danal\Documents\programing\chromedriver.exe', loading_sec=7):
+    now = dt.datetime.today()
+
+    if int(now.strftime('%S')) < 60 - loading_sec:
+        alarm_time = now + dt.timedelta(minutes=1)
+    else:
+        alarm_time = now + dt.timedelta(minutes=2)
+
+    alarm_time = alarm_time.strftime('%X')
+    driver = webdriver.Chrome(webdriver_path)
+    driver.get(f'https://vclock.kr/#time={alarm_time}&title=%EC%95%8C%EB%9E%8C&sound=musicbox&loop=1')
+    driver.find_element_by_xpath('//*[@id="pnl-main"]').click()
+    input('\033[1mPress Enter\033[0m')

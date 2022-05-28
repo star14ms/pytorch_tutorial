@@ -65,10 +65,12 @@ def train(dataloader, model, device, loss_fn, optimizer, graph_datas=None, verbo
 
         # 예측 오류 계산
         pred = model(X)
-        loss = loss_fn(pred, t)
+        loss = loss_fn(pred, t).cpu()
         if graph_datas!=None: graph_datas['train_losses_all'].append(loss)
         train_loss += loss_fn(pred, t).item()
-        correct += (pred.argmax(1) == t).type(torch.float).sum().item()
+        correct += (pred.argmax(1) == t).type(torch.float32).sum().item()
+
+        # print('memory', torch.cuda.memory_stats(device='cuda:0'))
 
         # 역전파
         optimizer.zero_grad()
@@ -93,12 +95,12 @@ def test(dataloader, model, device, loss_fn, return_wrong_xs=False, verbose=True
         for X, t in dataloader:
             X, t = X.to(device), t.to(device)
             pred = model(X)
-            test_loss += loss_fn(pred, t).item()
+            test_loss += loss_fn(pred, t).cpu().item()
             correct += (pred.argmax(1) == t).type(torch.float).sum().item()
             if return_wrong_xs: 
-                wrong_idxs.extend(pred.argmax(1) != t)
-                wrong_ys.extend(pred.numpy())
-                wrong_ts.extend(t)
+                wrong_idxs.extend(pred.cpu().argmax(1) != t.cpu())
+                wrong_ys.extend(pred.cpu().numpy())
+                wrong_ts.extend(t.cpu())
 
     test_loss /= size
     correct /= size
@@ -121,7 +123,7 @@ import sys
 def show_filters(model):
     for param in model.parameters():
         print(param.size(), 'Conv params!!' if len(param.size()) == 4 else '') 
-        if len(param.size()) == 4: plot.imgs_show(param.detach().numpy())
+        if len(param.size()) == 4: plot.imgs_show(param.detach().cpu().numpy())
 
 
 def show_activation_value_distribution(model, test_dataloader, device, loss_fn, ylim=1e6*2):

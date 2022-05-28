@@ -62,8 +62,8 @@ class NeuralNetwork1(nn.Module):
         self.save_activation_value = save_activation_value
         
         if save_activation_value:
-            self.act_values = {'conv1':[], 'conv2':[], 'conv3':[], 'conv4':[], 'liner1':[]}
-
+            self.init_saved_act_values()
+            
     def forward(self, x):
         x1 = self.conv1_pool(x)
         x2 = self.conv2(x1)
@@ -76,13 +76,21 @@ class NeuralNetwork1(nn.Module):
         y = self.liner2(x5)
         
         if self.save_activation_value:
-            self.act_values['conv1'].append(x1)
-            self.act_values['conv2'].append(x2)
-            self.act_values['conv3'].append(x3)
-            self.act_values['conv4'].append(x4)
-            self.act_values['liner1'].append(x5)
+            self.act_values['conv1'].append(torch.clone(x1).cpu())
+            self.act_values['conv2'].append(torch.clone(x2).cpu())
+            self.act_values['conv3'].append(torch.clone(x3).cpu())
+            self.act_values['conv4'].append(torch.clone(x4).cpu())
+            self.act_values['liner1'].append(torch.clone(x5).cpu())
 
         return y
+
+    def init_saved_act_values(self):
+        self.act_values = {'conv1':[], 'conv2':[], 'conv3':[], 'conv4':[], 'liner1':[]}
+    
+    def set_save_activation_value(self, save_activation_value):
+        self.save_activation_value = save_activation_value
+        if not save_activation_value:
+            self.init_saved_act_values()
 
 
 # CCPCPC+CLL(+N,D)
@@ -120,8 +128,8 @@ class NeuralNetwork2(nn.Module):
         self.save_activation_value = save_activation_value
         
         if save_activation_value:
-            self.act_values = {'conv1':[], 'conv2':[], 'conv3':[], 'conv4':[], 'liner1':[]}
-
+            self.init_saved_act_values()
+            
     def forward(self, x):
         x1 = self.conv1_pool(x)
         x2 = self.conv2_pool(x1)
@@ -134,13 +142,21 @@ class NeuralNetwork2(nn.Module):
         y = self.liner2(x5)
 
         if self.save_activation_value:
-            self.act_values['conv1'].append(x1)
-            self.act_values['conv2'].append(x2)
-            self.act_values['conv3'].append(x3)
-            self.act_values['conv4'].append(x4)
-            self.act_values['liner1'].append(x5)
+            self.act_values['conv1'].append(torch.clone(x1).cpu())
+            self.act_values['conv2'].append(torch.clone(x2).cpu())
+            self.act_values['conv3'].append(torch.clone(x3).cpu())
+            self.act_values['conv4'].append(torch.clone(x4).cpu())
+            self.act_values['liner1'].append(torch.clone(x5).cpu())
 
         return y
+
+    def init_saved_act_values(self):
+        self.act_values = {'conv1':[], 'conv2':[], 'conv3':[], 'conv4':[], 'liner1':[]}
+    
+    def set_save_activation_value(self, save_activation_value):
+        self.save_activation_value = save_activation_value
+        if not save_activation_value:
+            self.init_saved_act_values()
 
 
 # CCPCCPC+CLL(+N,D)
@@ -180,8 +196,8 @@ class NeuralNetwork3(nn.Module):
         self.save_activation_value = save_activation_value
         
         if save_activation_value:
-            self.act_values = {'conv1':[], 'conv2':[], 'conv3':[], 'conv4':[], 'liner1':[]}
-
+            self.init_saved_act_values()
+            
     def forward(self, x):
         x1 = self.conv1_pool(x)
         x2 = self.conv2_pool(x1)
@@ -194,10 +210,18 @@ class NeuralNetwork3(nn.Module):
         y = self.liner2(x5)
 
         if self.save_activation_value:
-            self.act_values['conv1'].append(x1)
-            self.act_values['conv2'].append(x2)
-            self.act_values['conv3'].append(x3)
-            self.act_values['conv4'].append(x4)
-            self.act_values['liner1'].append(x5)
+            self.act_values['conv1'].append(torch.clone(x1).cpu())
+            self.act_values['conv2'].append(torch.clone(x2).cpu())
+            self.act_values['conv3'].append(torch.clone(x3).cpu())
+            self.act_values['conv4'].append(torch.clone(x4).cpu())
+            self.act_values['liner1'].append(torch.clone(x5).cpu())
 
         return y
+
+    def init_saved_act_values(self):
+        self.act_values = {'conv1':[], 'conv2':[], 'conv3':[], 'conv4':[], 'liner1':[]}
+    
+    def set_save_activation_value(self, save_activation_value):
+        self.save_activation_value = save_activation_value
+        if not save_activation_value:
+            self.init_saved_act_values()

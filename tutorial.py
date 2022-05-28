@@ -24,7 +24,7 @@ train_dataloader = DataLoader(training_data, batch_size=batch_size)
 test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
 for X, y in test_dataloader:
-    print("Shape of X [N, C, H, W]: ", X.shape)
+    print("Shape of X [N, C, H, W]: ", X.shape, X.dtype)
     print("Shape of y: ", y.shape, y.dtype)
     break
 
@@ -38,9 +38,8 @@ print("Using {} device\n".format(device))
 
 # 모델을 정의합니다.
 model = NeuralNetwork2(save_activation_value=True).to(device)
-# model_path = 'model acc_99.49 loss_0.00064153 CCPCPC+CLL(+N,D) 70ep'
-# model.load_state_dict(torch.load(model_path+'.pth'))
-# model = torch.load('2model acc_99.44 loss_0.00045928 CCPCCPC+CLL(+N,D)'+'.pth')
+model_path = 'model acc_99.04 loss_0.00034809 NeuralNetwork2'
+model.load_state_dict(torch.load(model_path+'.pth'))
 network = model.__class__.__name__
 # print(model)
 
@@ -51,7 +50,8 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
 # show_filters(model)
-# show_activation_value_distribution(model, test_dataloader, device, loss_fn, ylim=1e6*2)
+show_activation_value_distribution(model, test_dataloader, device, loss_fn, ylim=1e6*2)
+model.set_save_activation_value(False)
 # exit()
 ##############################################################################
 
@@ -72,16 +72,16 @@ graph_datas = {'train_losses':[], 'test_losses':[], 'train_losses_all':[], 'test
     # plot.accuracy_graphs(accs)
     # exit()
 
-start_time = t.time()
+start_time = Time.now()
 max_acc = 0
-epochs = 10
+epochs = 0
 file_path1, file_path2 = None, None
 save_min_acc = 0.994
 
 
 for i in range(epochs):
     print(f"Epoch {i+1} ({Time.hms_delta(start_time)})\n-------------------------------")
-    _, train_loss_avg = train(train_dataloader, model, device, loss_fn, optimizer, graph_datas)
+    _, train_loss_avg = train(train_dataloader, model, device, loss_fn, optimizer, graph_datas=None)
     acc, test_loss_avg = test(test_dataloader, model, device, loss_fn)
     
     graph_datas['train_losses'].append(train_loss_avg)
