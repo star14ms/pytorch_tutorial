@@ -193,43 +193,82 @@ class plot:
     
 ################################################################################################################################
 
-    def imgs_show(img, nx='auto', margin=3, scale=10, title=None, title_info=[], text_info=[], dark_mode=True, adjust={'l':0, 'r':1, 'b':0.03, 't':1, 'hs':0.05, 'ws':0.05}):
+    def imgs_show(img, nx='auto', filter_chans_show=False, title='', title_img=None, subtitles=[], text_info=[], dark_mode=True, full_screen=True,
+        adjust={'left':0, 'right':1, 'bottom':0.02, 'top':0.98, 'hspace':0.05, 'wspace':0.02}):
         """
         c.f. https://gist.github.com/aidiary/07d530d5e08011832b12#file-draw_weight-py
         """
-        FN, _, _, _ = img.shape
-        if nx == 'auto': 
-            nx = math.ceil(math.sqrt(FN*108/192)/108*192)
-            # print(nx)
-        ny = int(np.ceil(FN / nx))
-        l, r, b, t, hs, ws = adjust['l'], adjust['r'], adjust['b'], adjust['t'], adjust['hs'], adjust['ws']
-    
-        fig = plt.figure()
-        fig.subplots_adjust(left=l, right=r, bottom=b, top=t, hspace=hs, wspace=ws)
         cmap='gray' if dark_mode else plt.cm.gray_r
 
-        for i in range(FN):
-            ax = fig.add_subplot(ny, nx, i+1, xticks=[], yticks=[])
-            if title!=None:
-                info = title_info[i] if title_info!=[] else i+1
-                plt.title(info if title=='' else f"{title} ({info})") ### plot() 후에 나와야 함
+        if len(img.shape) < 4:
+            add = [1]*(4-len(img.shape))
+            img = img.reshape(*add, *img.shape)
 
+        FN, C, _, _ = img.shape
+        imgs_num = FN if not filter_chans_show else C
+        if imgs_num == 1:
+            nx = 1
+        elif nx == 'auto': 
+            nx = math.ceil(math.sqrt(imgs_num*108/192)/108*192)
+            # print(nx)
+        ny = int(np.ceil(imgs_num / nx)) + 1
+
+        fig = plt.figure()
+        fig.subplots_adjust(**adjust)
+    
+        # 제목
+        ax = fig.add_subplot(ny, 1, 1, xticks=[], yticks=[])
+        ax.text(0.8, 0.5, f'{title}{img.shape}', size=30, ha='center', va='center')
+
+        if title_img is not None:
+            ax = fig.add_subplot(ny, 1, 1, xticks=[], yticks=[])
+            ax.imshow(title_img[0, 0], cmap=cmap, interpolation='nearest')
+
+        # 내용
+        for i in range(imgs_num):
+            ax = fig.add_subplot(ny, nx, nx+i+1, xticks=[], yticks=[])
+            if subtitles!=[]:
+                plt.title(f'\n{subtitles[i]}' if subtitles!='' else f'{i+1}')
             if text_info!=[]:
+                kwargs = {
+                    'ha': 'left',
+                    'va': 'top',
+                    'fontsize': 16,
+                    'color': 'Green' if info[0] in info[-1] else 'Red'
+                } 
                 info = text_info[i].split(' | ')
-                ax.text(0, 0, info[0], ha="left", va="top", fontsize=16, color='white' if dark_mode else 'black')
-                fig.canvas.draw()
-                ax.text(18, 25, info[-1], ha="left", va="top", fontsize=11, color='white' if dark_mode else 'black')
-                fig.canvas.draw()
                 
-            ax.imshow(img[i, 0], cmap=cmap, interpolation='nearest')
+                ax.text(0, 0, info[0], **kwargs)
+                fig.canvas.draw()
+                ax.text(18, 25, info[-1], **kwargs)
+                fig.canvas.draw()
+            
+            im = img[i, 0] if not filter_chans_show else img[0, i]
+            ax.imshow(im, cmap=cmap, interpolation='nearest')
 
+        if full_screen:
+            figManager = plt.get_current_fig_manager()
+            figManager.window.showMaximized()
+            plt.pause(0.01)
         plt.show()
+
+    
+    def show_feature_maps(test_data, idx, model, device):
+        import torch
+
+        with torch.no_grad():
+            x = test_data[idx][0]
+            x = x.reshape(1, *x.shape).to(device)
+            model(x)
+        
+            for key, value in model.act_values.items():
+                plot.imgs_show(value[0], filter_chans_show=True, title=key+' - ', title_img=x.cpu())
 
 
     def all_imgs_show(network, nx='auto'):
         for key in network.params.keys():
             if network.params[key].ndim == 4:
-                plot.filter_show(network.params[key], filters_name=key, nx=nx)
+                plot.imgs_show(network.params[key], filters_name=key, nx=nx)
 
 ################################################################################################################################
 

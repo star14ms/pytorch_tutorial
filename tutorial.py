@@ -49,10 +49,6 @@ network = model.__class__.__name__
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-# show_filters(model)
-show_activation_value_distribution(model, test_dataloader, device, loss_fn, ylim=1e6*2)
-model.set_save_activation_value(False)
-# exit()
 ##############################################################################
 
 graph_datas = {'train_losses':[], 'test_losses':[], 'train_losses_all':[], 'test_accs':[]}
@@ -131,11 +127,17 @@ plot.set_font(r'font/주아체.ttf')
 classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 model.eval()
 
-img = np.zeros([28, 28])
-# img[8:20,13], img[8:20,14] = 255, 255
-img[7:21,7], img[7:21,20], img[7,7:21], img[20,7:21] = 255, 255, 255, 255 # 0
-img[14,7:21] = 255
-x, y = torch.from_numpy(img.reshape(1, 1, 28, 28)/255).float(), 1
+
+# show_filters(model)
+# show_activation_value_distribution(model, test_dataloader, device, loss_fn, ylim=1e6*2)
+
+plot.show_feature_maps(test_data, 0, model, device)
+
+# img = np.zeros([28, 28])
+# # img[8:20,13], img[8:20,14] = 255, 255
+# img[7:21,7], img[7:21,20], img[7,7:21], img[20,7:21] = 255, 255, 255, 255 # 0
+# img[14,7:21] = 255
+# x, y = torch.from_numpy(img.reshape(1, 1, 28, 28)/255).float(), 1
 
 # x, y = test_data[0][0].reshape(1, 1, 28, 28), test_data[0][1]
 # with torch.no_grad():
@@ -143,6 +145,7 @@ x, y = torch.from_numpy(img.reshape(1, 1, 28, 28)/255).float(), 1
     # predicted, actual = classes[pred[0].argmax(0)], classes[y]
     # print(f'Predicted: "{predicted}", Actual: "{actual}"')
     # show_wrong_answers_info(x, pred.numpy(), title_info=[f'{actual}, (예측: {predicted})'])
+
 
 # 틀린 문제들 시각화
 wrong_idxs, wrong_ys, wrong_ts = test(test_dataloader, model, device, loss_fn, return_wrong_xs=True)
@@ -154,4 +157,3 @@ plot.imgs_show(test_data[wrong_idxs][0], dark_mode=True, text_info=title_info,##
 
 show_wrong_answers_info(test_data[wrong_idxs][0], wrong_ys, title_info='idx', text_info=title_info)
 
-######################################################################
